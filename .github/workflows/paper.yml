@@ -39,7 +39,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           pip install requests
-          python <<'PY'
+          cat > notify.py <<'EOF'
 import os, requests
 
 tok = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -53,4 +53,5 @@ if tok and chat:
     )
 else:
     print("⚠️ Telegram secrets mancanti o non letti correttamente")
-PY
+EOF
+          python notify.py
