@@ -3,7 +3,7 @@ name: Paper Testing (AutoMode)
 on:
   workflow_dispatch:
   schedule:
-    - cron: "30 21 * * 1-5"   # ogni giorno feriale alle 21:30
+    - cron: "30 21 * * 1-5"   # ogni giorno feriale alle 21:30 UTC
 
 jobs:
   run:
@@ -39,19 +39,15 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           pip install requests
-          cat > notify.py <<'EOF'
-import os, requests
-
-tok = os.getenv("TELEGRAM_BOT_TOKEN")
-chat = os.getenv("TELEGRAM_CHAT_ID")
-
-if tok and chat:
-    msg = f"✅ Paper run completato su {os.getenv('GITHUB_REPOSITORY')} (Run #{os.getenv('GITHUB_RUN_NUMBER')})"
-    requests.post(
-        f"https://api.telegram.org/bot{tok}/sendMessage",
-        json={"chat_id": chat, "text": msg},
-    )
-else:
-    print("⚠️ Telegram secrets mancanti o non letti correttamente")
-EOF
+          printf '%s\n' \
+          "import os, requests" \
+          "tok = os.getenv('TELEGRAM_BOT_TOKEN')" \
+          "chat = os.getenv('TELEGRAM_CHAT_ID')" \
+          "" \
+          "if tok and chat:" \
+          "    msg = f\"✅ Paper run completato su {os.getenv('GITHUB_REPOSITORY')} (Run #{os.getenv('GITHUB_RUN_NUMBER')})\"" \
+          "    requests.post(f\"https://api.telegram.org/bot{tok}/sendMessage\", json={'chat_id': chat, 'text': msg})" \
+          "else:" \
+          "    print('⚠️ Telegram secrets mancanti o non letti correttamente')" \
+          > notify.py
           python notify.py
