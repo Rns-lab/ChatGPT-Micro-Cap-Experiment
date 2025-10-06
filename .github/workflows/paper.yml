@@ -18,8 +18,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt || pip install pandas yfinance 
-openai matplotlib requests
+          pip install -r requirements.txt || pip install pandas yfinance openai matplotlib requests
 
       - name: Run paper test
         env:
@@ -47,8 +46,7 @@ tok = os.getenv("TELEGRAM_BOT_TOKEN")
 chat = os.getenv("TELEGRAM_CHAT_ID")
 
 if tok and chat:
-    msg = f"✅ Paper run completato su {os.getenv('GITHUB_REPOSITORY')} 
-(Run #{os.getenv('GITHUB_RUN_NUMBER')})"
+    msg = f"✅ Paper run completato su {os.getenv('GITHUB_REPOSITORY')} (Run #{os.getenv('GITHUB_RUN_NUMBER')})"
     requests.post(
         f"https://api.telegram.org/bot{tok}/sendMessage",
         json={"chat_id": chat, "text": msg},
@@ -56,4 +54,3 @@ if tok and chat:
 else:
     print("⚠️ Telegram secrets mancanti o non letti correttamente")
 PY
-
