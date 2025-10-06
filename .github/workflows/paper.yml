@@ -3,25 +3,36 @@ name: Paper Testing (AutoMode)
 on:
   workflow_dispatch:
   schedule:
-    - cron: "30 21 * * 1-5"
+    - cron: "30 21 * * 1-5"   # ogni giorno feriale alle 21:30
 
 jobs:
   run:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -r requirements.txt || pip install pandas yfinance openai matplotlib requests
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt || pip install pandas yfinance 
+openai matplotlib requests
+
       - name: Run paper test
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: python simple_automation.py || python trading_script.py
-      - uses: actions/upload-artifact@v4
+        run: |
+          python simple_automation.py || python trading_script.py
+
+      - name: Upload CSV results
+        uses: actions/upload-artifact@v4
         with:
           name: paper-run-${{ github.run_number }}
           path: "**/*.csv"
+
       - name: Telegram notify
         if: always()
         env:
@@ -29,9 +40,20 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           pip install requests
-          python - <<'PY'
-import os,requests
-tok=os.getenv("TELEGRAM_BOT_TOKEN");chat=os.getenv("TELEGRAM_CHAT_ID")
+          python <<'PY'
+import os, requests
+
+tok = os.getenv("TELEGRAM_BOT_TOKEN")
+chat = os.getenv("TELEGRAM_CHAT_ID")
+
 if tok and chat:
-    requests.post(f"https://api.telegram.org/bot{tok}/sendMessage",json={"chat_id":chat,"text":"✅ Paper run completato"})
+    msg = f"✅ Paper run completato su {os.getenv('GITHUB_REPOSITORY')} 
+(Run #{os.getenv('GITHUB_RUN_NUMBER')})"
+    requests.post(
+        f"https://api.telegram.org/bot{tok}/sendMessage",
+        json={"chat_id": chat, "text": msg},
+    )
+else:
+    print("⚠️ Telegram secrets mancanti o non letti correttamente")
 PY
+
